@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>D3: Filtering selections based on slider input values</title>
+		<script src="https://d3js.org/d3.v4.min.js"></script>
+		<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+
+		<style type="text/css">
+			
+			p {
+				display: inline-block;
+			}
+			input {
+				height: 250px;
+				width: 30px;
+				/* Orient vertically */
+				-webkit-appearance: slider-horizontal;
+				writing-mode: bt-lr;
+			}
+			
+			rect:hover {
+				fill: orange;
+			}
+
+			<style>
+.slidecontainer {
+    width: 100%;
+}
+
+.slider {
+    -webkit-appearance: none;
+    width: 50%;
+    height: 25px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+
+.slider:hover {
+    opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    background: #838383;
+    cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    background: #838383;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="slidecontainer">
+  
+  <input type="range" min="0" max="25" step="1" value="0" class="slider" id="slider">
+  <br>
+  <p>Value: <span id="demo"></span></p>
+</div>
+
+<script>
+var slider = document.getElementById("slider");
+var output = document.getElementById("demo");
+output.innerHTML = slider.value;
+
+slider.oninput = function() {
+  output.innerHTML = this.value;
+}
+</script>
+
+<br>
+		<script type="text/javascript">
+			//Width and height
+			var w = 600;
+			var h = 250;
+		
+			
+			d3.csv("files.csv", function(dataset){
+				var xScale = d3.scaleBand()
+							.domain(d3.range(dataset.length))
+							.rangeRound([0, w])
+							.paddingInner(0.05);
+			
+			var yScale = d3.scaleLinear()
+							.domain([0, d3.max(dataset, function(d) { return d.value; })])
+							.range([0, h]);
+
+							var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h);
+
+			//Create bars
+			svg.selectAll("rect")
+			   .data(dataset, key)
+			   .enter()
+			   .append("rect")
+			   .attr("x", function(d, i) {
+			   		return xScale(i);
+			   })
+			   .attr("y", function(d) {
+			   		return h - yScale(d.value);
+			   })
+			   .attr("width", xScale.bandwidth())
+			   .attr("height", function(d) {
+			   		return yScale(d.value);
+			   })
+			   .attr("fill", function(d) {
+					return "rgb(0, 0, " + (d.value * 10) + ")";
+			   })
+			   .on("mouseover", function(d) {
+
+					//Get this bar's x/y values, then augment for the tooltip
+					var xPosition = parseFloat(d3.select(this).attr("x")) + xScale.bandwidth() / 2;
+					var yPosition = parseFloat(d3.select(this).attr("y")) + 14;
+
+					//Create the tooltip label
+					svg.append("text")
+					   .attr("id", "tooltip")
+					   .attr("x", xPosition)
+					   .attr("y", yPosition)
+					   .attr("text-anchor", "middle")
+					   .attr("font-family", "sans-serif")
+					   .attr("font-size", "11px")
+					   .attr("font-weight", "bold")
+					   .attr("fill", "black")
+					   .text(d.value);
+
+			   })
+			   .on("mouseout", function() {
+			   
+					//Remove the tooltip
+					d3.select("#tooltip").remove();
+					
+			   })
+
+			//On change, update styling
+			d3.select("input")
+				.on("change", function() {
+					var threshold = +d3.select(this).node().value;
+					
+					svg.selectAll("rect")
+						.attr("fill", function(d) {
+							return "rgb(0, 0, " + (d.value * 10) + ")";
+						})
+						.filter(function(d) {
+							return d.value <= threshold;
+						})
+						.attr("fill", "none");
+				});
+			})
+
+
+			
+			var key = function(d) {
+				return d.key;
+			};
+			
+		</script>
+	</body>
+</html>
